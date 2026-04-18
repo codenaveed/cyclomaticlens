@@ -53,12 +53,19 @@ The extension can be configured via VS Code settings:
 
 ### Project Structure
 ```
-ccm-analyzer/
-├── extension/             # VS Code extension files
-│   ├── package.json      # Extension manifest
+cyclomaticlens
+├── extension/            # VS Code extension files
+│   └── build_vsix.py     # Build script (Python)
+│   └── core.js           # Core implementation of anlyzer
 │   └── extension.js      # Pure JavaScript implementation
-├── build_vsix.py         # Build script (Python)
-├── examples/             # Example code files
+│   ├── package.json      # Extension manifest
+│   └── CHANGELOG.md      # Change history
+│   └── README.md         # Feature detail
+│   └── CyclomaticLens.png # Icon
+├── tests/                # Test related
+│   └── examples          # Demo language files
+│   └── scripts           # Test scripts
+│       └── ccm.test.js   # Test
 └── README.md             # This file
 ```
 ### Testing
