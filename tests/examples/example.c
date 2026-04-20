@@ -1,8 +1,18 @@
-// Example C file for testing cyclomatic complexity analysis
-
+/**
+ * Example C file for testing cyclomatic complexity analysis
+ */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#ifndef TEST_H
+#include "example.h"
+#endif TEST_H
+
+/**
+ * Variable Defintion
+ */
+char myVar;
 
 
 // ========== CASE 1 ==========

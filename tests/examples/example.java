@@ -1,7 +1,25 @@
+/**
+ * File Description
+ */
+package com.mypackage.example;
+
+import com.otherpackage.feature;
+
 public class example {
 
+    /**
+     * Field defintioins 
+     */
+    public short field0;
+    public short field1;
+
+    
     // ========== CASE 1 ==========
-    int c1() { 
+    /**
+     * Constructor Definition 
+     * c1 is replaced with constructor in java
+     */    
+    public example() { 
         return 0; 
     } 
 
@@ -147,9 +165,14 @@ public class example {
 
     // ========== CASE 21 ==========
     int c21(int a) {
+        // dummy comment 1
         for (int i = 0; i < a; i++) {
+            /**
+             * dummy comment 2
+             */
             while (i > 0) {
                 if (i % 2 == 0) return i;
+                // dummy comment 3
                 break;
             }
         }

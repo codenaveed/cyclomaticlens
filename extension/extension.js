@@ -105,7 +105,7 @@ function analyzeAndDecorate(editor) {
     if (functions) {
         functions.forEach(func => {
             const complexity = coreAnalyzer.calculateComplexity(func.body, language);
-            const { emoji, label, color } = getComplexityStyle(complexity);
+            const { label, color } = getComplexityStyle(complexity);
             
             // Get the function definition line
             const line = document.lineAt(func.startLine);
@@ -120,7 +120,7 @@ function analyzeAndDecorate(editor) {
                 range: range,
                 renderOptions: {
                     after: {
-                        contentText: ` ${emoji} CCM: ${complexity}(${label})`,
+                        contentText: ` CCM: ${complexity}(${label})`,
                         color: color
                     }
                 }
@@ -133,15 +133,15 @@ function analyzeAndDecorate(editor) {
 
 function getComplexityStyle(complexity) {
     if (complexity <= 10) {
-        return { emoji: "😀", label: 'Low', color: '#4EC9B0' };  // Green
+        return {label: 'Low', color: '#4EC9B0' };  // Green
     } else if (complexity <= 20) {
-        return { emoji: "☺️", label: 'Medium', color: '#dce400' };  // Yellow
+        return {label: 'Medium', color: '#dce400' };  // Yellow
     } else if (complexity <= 30) {
-        return { emoji: "😞", label: 'High', color: '#F44747' };  // Red
+        return {label: 'High', color: '#e9781c' };  // Orange
     } else if (complexity <= 50) {
-        return { emoji: "😡", label: 'Very High', color: '#F44747' };  // Red
+        return {label: 'Very High', color: '#F44747' };  // Red
     } else {
-        return { emoji: "👿", label: 'Critical', color: '#F44747' };  // Red
+        return {label: 'Critical', color: '#F44747' };  // Red
     }
 }
 

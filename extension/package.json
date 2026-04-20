@@ -2,11 +2,11 @@
   "name": "cyclomatic-lens",
   "displayName": "Cyclomatic Lens",
   "description": "Simple inline cyclomatic complexity scores for C, C++, Java, JavaScript, TypeScript, and Python files",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "publisher": "bitlab",
   "readme": "README.md",
   "changelog": "CHANGELOG.md",
-  "icon": "CyclomaticLens.png",
+  "icon": "icon.png",
   "engines": {
     "vscode": "^1.60.0"
   },
@@ -16,10 +16,13 @@
     "CCM",
     "McCabe",
     "complexity",
+    "code complexity",
+    "code metric",
     "code metrics",
     "code smell",
     "code quality",
     "linter",
+    "as you type",
     "C",
     "C++",
     "Java",
@@ -28,6 +31,7 @@
     "TypeScript",
     "Multi language",
     "Multi language CCM",
+    "Multi language complexity",
     "Multiple language cyclomatic"
   ],
   "categories": [

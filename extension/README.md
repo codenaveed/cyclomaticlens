@@ -61,7 +61,7 @@ Code is analyzed as you type, with debouncing to prevent performance issues. Com
 |---|---|---|
 | ≤ 10 | 🟢 Green | Low complexity — generally acceptable |
 | 11–20 | 🟡 Yellow | Medium complexity — acceptable but marginal |
-| 21–30 | 🔴 Red | High complexity — consider refactoring |
+| 21–30 | 🟠 Orange | High complexity — consider refactoring |
 | 31–50| 🔴 Red | Very high complexity — needs immediate attention |
 | > 50 | 🔴 Red | Critical complexity — Untestable |
 

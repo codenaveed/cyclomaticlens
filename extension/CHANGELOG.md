@@ -2,6 +2,11 @@
 
 All notable changes to the Cyclomatic Lens extension will be documented in this file.
 
+## [1.0.1] - Initial Public Release
+
+### Changed
+- **Formatting**: fixed CCM display when lines are commented on top of file
+
 ## [1.0.0] - Initial Public Release
 
 ### Added

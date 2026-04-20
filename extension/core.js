@@ -64,25 +64,22 @@ function preprocessC(code) {
     return result.join('\n');
 }
 
-/**
- * Parse C/C++ functions from source code
- * @param {string} sourceCode - The source code to parse
- * @returns {Array} Array of function objects with name, startLine, body, endLine
- */
-function parseCFunctions(sourceCode) {
+function parseFunctionsGeneric(sourceCode, matchFunctionStart, language) {
     const functions = [];
-    const lines = removeComments(sourceCode).split('\n');
-    
+    const cleanedLines = removeComments(sourceCode).split('\n');
+
     let i = 0;
-    while (i < lines.length) {
-        const funcMatch = matchCFunctionStart(lines[i]);
+    while (i < cleanedLines.length) {
+        const funcMatch = matchFunctionStart(cleanedLines[i]);
         if (funcMatch) {
-            const startLine = i;
-            const funcBody = extractFunctionBody(lines, i);
+            let funcBody = language === 'python'
+                ? extractPythonFunctionBody(cleanedLines, i)
+                : extractFunctionBody(cleanedLines, i);
+
             if (funcBody) {
                 functions.push({
                     name: funcMatch.name,
-                    startLine: startLine,
+                    startLine: i,
                     body: funcBody.body,
                     endLine: funcBody.endLine
                 });
@@ -92,8 +89,12 @@ function parseCFunctions(sourceCode) {
         }
         i++;
     }
-    
+
     return functions;
+}
+
+function parseCFunctions(sourceCode) {
+    return parseFunctionsGeneric(sourceCode, matchCFunctionStart, 'c');
 }
 
 /**
@@ -102,30 +103,7 @@ function parseCFunctions(sourceCode) {
  * @returns {Array} Array of function objects with name, startLine, body, endLine
  */
 function parseJavaFunctions(sourceCode) {
-    const functions = [];
-    const lines = removeComments(sourceCode).split('\n');
-    
-    let i = 0;
-    while (i < lines.length) {
-        const methodMatch = matchJavaMethodStart(lines[i]);
-        if (methodMatch) {
-            const startLine = i;
-            const methodBody = extractFunctionBody(lines, i);
-            if (methodBody) {
-                functions.push({
-                    name: methodMatch.name,
-                    startLine: startLine,
-                    body: methodBody.body,
-                    endLine: methodBody.endLine
-                });
-                i = methodBody.endLine + 1;
-                continue;
-            }
-        }
-        i++;
-    }
-    
-    return functions;
+    return parseFunctionsGeneric(sourceCode, matchCFunctionStart, 'java');
 }
 
 /**
@@ -134,30 +112,7 @@ function parseJavaFunctions(sourceCode) {
  * @returns {Array} Array of function objects with name, startLine, body, endLine
  */
 function parseJavaScriptFunctions(sourceCode) {
-    const functions = [];
-
-    const lines = removeComments(sourceCode).split('\n');
-    let i = 0;
-    while (i < lines.length) {
-        const funcMatch = matchJavaScriptFunctionStart(lines[i]);
-        if (funcMatch) {
-            const startLine = i;
-            const funcBody = extractFunctionBody(lines, i);
-            if (funcBody) {
-                functions.push({
-                    name: funcMatch.name,
-                    startLine: startLine,
-                    body: funcBody.body,
-                    endLine: funcBody.endLine
-                });
-                i = funcBody.endLine + 1;
-                continue;
-            }
-        }
-        i++;
-    }
-    
-    return functions;
+    return parseFunctionsGeneric(sourceCode, matchJavaScriptFunctionStart, 'javascript');
 }
 
 /**
@@ -166,30 +121,7 @@ function parseJavaScriptFunctions(sourceCode) {
  * @returns {Array} Array of function objects with name, startLine, body, endLine
  */
 function parsePythonFunctions(sourceCode) {
-    const functions = [];
-    const lines = sourceCode.split('\n');
-    
-    let i = 0;
-    while (i < lines.length) {
-        const funcMatch = matchPythonFunctionStart(lines[i]);
-        if (funcMatch) {
-            const startLine = i;
-            const funcBody = extractPythonFunctionBody(lines, i);
-            if (funcBody) {
-                functions.push({
-                    name: funcMatch.name,
-                    startLine: startLine,
-                    body: funcBody.body,
-                    endLine: funcBody.endLine
-                });
-                i = funcBody.endLine + 1;
-                continue;
-            }
-        }
-        i++;
-    }
-    
-    return functions;
+    return parseFunctionsGeneric(sourceCode, matchPythonFunctionStart, 'python');
 }
 
 function matchCFunctionStart(line) {
@@ -356,9 +288,12 @@ function extractFunctionBody(lines, startLine) {
 }
 
 function removeComments(code) {
-    // Remove block comments /* ... */
-    code = code.replace(/\/\*[\s\S]*?\*\//g, '');
-    // Remove line comments // ...
+    // Preserve line count by replacing block comment content with newlines
+    code = code.replace(/\/\*[\s\S]*?\*\//g, match => {
+        const lineCount = (match.match(/\n/g) || []).length;
+        return '\n'.repeat(lineCount);
+    });
+    // Remove line comments (single line, safe)
     code = code.replace(/\/\/.*$/gm, '');
     return code;
 }
