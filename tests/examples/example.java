@@ -176,13 +176,13 @@ public class example {
                 break;
             }
         }
-        return 0;
+        return -1;
     } 
 
     // ========== CASE 22 ==========
-    int c22(int a) {
+    Object c22(int a) {
         if (a > 0 && a < 10) return 1;
-        return 0;
+        return myObject;
     }  
 
     // ========== CASE 23 ==========
@@ -192,7 +192,7 @@ public class example {
     } 
 
     // ========== CASE 24 ==========
-    int c24(int a) {
+    int c24(byte[] a) {
         if (a > 0) {
             if (a < 10) {
                 if (a == 5) {
@@ -204,19 +204,19 @@ public class example {
     } 
 
     // ========== CASE 25 ==========
-    int c25(int x) {
+    byte[] c25(int x) {
         switch (x) {
             case 1:
             case 2:
             case 3:
-                return 1;
+                return myArray;
             default:
-                return 0;
+                return null;
         }
     } 
 
     // ========== CASE 26 ==========
-    int c26(int a) {
+    int c26(int a) throws Exception {
         if (a > 0) return 1;
         if (a > 1) return 2;
         if (a > 2) return 3;

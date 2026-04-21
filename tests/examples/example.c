@@ -342,6 +342,12 @@ int c32(int a, int b, int c) {
 
 // ========== CASE 33 ==========
 int c33(int x) {
+
+#if 0
+  //this block shall not be counted
+  x--;
+#endif
+
 #ifdef DEBUG
     if (x > 0) return 1;
 #else

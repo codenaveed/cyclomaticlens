@@ -61,7 +61,7 @@ cyclomaticlens
 │   ├── package.json      # Extension manifest
 │   └── CHANGELOG.md      # Change history
 │   └── README.md         # Feature detail
-│   └── CyclomaticLens.png # Icon
+│   └── icon.png          # Icon
 ├── tests/                # Test related
 │   └── examples          # Demo language files
 │   └── scripts           # Test scripts

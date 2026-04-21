@@ -22,6 +22,7 @@ function preprocessC(code) {
             let foundElif = false;
             let foundElse = false;
             let foundEndif = false;
+            let isIfZero = (line.startsWith('#if 0') || line.startsWith('#if 0 '));
             
             // Scan forward to find the end of this preprocessor block
             while (j < lines.length && !foundEndif) {
@@ -41,15 +42,15 @@ function preprocessC(code) {
             // An independent block is just #if/#ifdef/#ifndef ... #endif with no #elif or #else
             isChain = foundElif || foundElse;
             
-            if (isChain) {
-                // For chains: add a marker that will be counted as +1
-                result.push('__PP_CHAIN__');
-            } else {
-                // For independent blocks: add a marker for each independent block
-                // But wait: #ifdef and #ifndef should be counted as +1 each when independent
-                // #if should also be counted as +1 when independent
-                result.push('__PP_INDEPENDENT__');
-            }
+                if (isChain) {
+                    // For chains: add a marker that will be counted as +1
+                    result.push('__PP_CHAIN__');
+                } else if (!isIfZero) {
+                    // For independent blocks: add a marker for each independent block
+                    // But wait: #ifdef and #ifndef should be counted as +1 each when independent
+                    // #if should also be counted as +1 when independent
+                    result.push('__PP_INDEPENDENT__');
+                }
             
             // Skip the entire preprocessor block
             i = j; // j is already pointing to the line after #endif
@@ -103,7 +104,7 @@ function parseCFunctions(sourceCode) {
  * @returns {Array} Array of function objects with name, startLine, body, endLine
  */
 function parseJavaFunctions(sourceCode) {
-    return parseFunctionsGeneric(sourceCode, matchCFunctionStart, 'java');
+    return parseFunctionsGeneric(sourceCode, matchJavaMethodStart, 'java');
 }
 
 /**
@@ -163,11 +164,23 @@ function matchJavaMethodStart(line) {
     if (/^\s*(?:private|public|protected)?\s*\w+<[^>]*>\s+\w+\s*=/.test(trimmed)) {
         return null;
     }
-    
-    // Match Java method declarations:
-    // [modifiers] return_type method_name(params) [throws exceptions] {
-    // Allow comments at the end of the line
-    const methodPattern = /^(?:public|private|protected|static|final|abstract|synchronized|native|\s)*\s*(?:<[^>]+>\s*)?[\w<>\[\]]+\s+(\w+)\s*\([^)]*\)(?:\s*throws\s+[\w,\s]+)?\s*\{?\s*(?:\/\/.*)?$/;
+
+    const methodPattern =
+    "^" + // start of line
+    "(?:public|private|protected|static|final|abstract|synchronized|native|\\s)*" + // modifiers OR whitespace (repeated)
+    "\\s*" + // optional whitespace
+    "(?:<[^>]+>\\s*)?" + // optional generics (e.g. <T>)
+    "[\\w<>\\[\\]]+" + // return type (e.g. int, List<T>, byte[])
+    "\\s+" + // space before method name
+    "(\\w+)" + // method name (captured)
+    "\\s*" + // optional whitespace
+    "\\([^)]*\\)" + // parameter list
+    "(?:\\s*throws\\s+[\\w,\\s]+)?" + // optional throws clause
+    "\\s*" + // optional whitespace
+    "\\{?" + // optional opening brace
+    "\\s*" + // optional whitespace
+    "(?:\\/\\/.*)?" + // optional single-line comment
+    "$"; // end of line    
     const match = trimmed.match(methodPattern);
     
     if (match && match[1]) {

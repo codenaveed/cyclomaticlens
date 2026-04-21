@@ -2,7 +2,12 @@
 
 All notable changes to the Cyclomatic Lens extension will be documented in this file.
 
-## [1.0.1] - Initial Public Release
+## [1.0.2] - Bug fix
+
+### Changed
+- **Missing Methods**: fixed Java method detection and fix bad counting '#if 0' in C
+
+## [1.0.1] - Bug fix
 
 ### Changed
 - **Formatting**: fixed CCM display when lines are commented on top of file
