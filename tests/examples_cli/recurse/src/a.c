@@ -1,5 +1,6 @@
- * @complexity Low
-/** Does foo. */
+/**
+ * Does foo.
+ */
 void foo() {
     if (1) {}
 }

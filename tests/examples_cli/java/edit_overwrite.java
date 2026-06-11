@@ -10,6 +10,9 @@ public class Stuff {
         if(a) { b(); }
     }
 
+    /**
+     * Empty operation.
+     */
     public void empty() {
     }
 }

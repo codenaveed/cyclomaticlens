@@ -9,6 +9,9 @@ public class Main {
         if(a) { b(); }
     }
 
+    /**
+     * Stops the process.
+     */
     public void stop() {
     }
 }

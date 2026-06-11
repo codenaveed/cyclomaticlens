@@ -10,5 +10,8 @@ function doStuff(x) {
     if (x) { return x; }
 }
 
+/**
+ * No-op function.
+ */
 function noop() {
 }

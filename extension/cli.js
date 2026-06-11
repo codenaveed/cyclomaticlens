@@ -68,12 +68,19 @@ function analyzeFile(fileInfo) {
     return results;
 }
 
+function escapeCsv(val) {
+    const s = String(val);
+    if (/[,"\n]/.test(s)) {
+        return '"' + s.replace(/"/g, '""') + '"';
+    }
+    return s;
+}
+
 function toCsv(results) {
-    const header = 'Path|File|Function|CCM|Complexity';
-    const rows = results.map(r => {
-        const safeFn = String(r.function).replace(/\|/g, '\\|');
-        return `${r.path}|${r.file}|${safeFn}|${r.ccm}|${r.level}`;
-    });
+    const header = 'Path,File,Function,CCM,Complexity';
+    const rows = results.map(r =>
+        [r.path, r.file, r.function, r.ccm, r.level].map(escapeCsv).join(',')
+    );
     return [header, ...rows].join('\n');
 }
 
@@ -148,6 +155,8 @@ function getDocstringIndent(lines, startLine) {
 
 function upsertComplexityTagJavaLike(lines, range, level) {
     const { startLine, endLine } = range;
+    if (startLine === endLine) return; // skip single-line docstrings
+
     let existingComplexity = -1;
     let lastTagLine = -1;
 
@@ -205,6 +214,27 @@ function upsertComplexityTagPython(lines, range, level) {
     lines.splice(endLine, 0, newLine);
 }
 
+// ── Docstring creation ───────────────────────────────────────────────────────
+
+function addJavaLikeDocstring(lines, funcStartLine, level) {
+    const indent = lines[funcStartLine].match(/^(\s*)/)[0];
+    lines.splice(funcStartLine, 0,
+        `${indent}/**`,
+        `${indent} * @complexity ${level}`,
+        `${indent} */`
+    );
+}
+
+function addPythonDocstring(lines, funcStartLine, level) {
+    const defLine = lines[funcStartLine];
+    const defIndent = defLine.match(/^(\s*)/)[0];
+    const bodyIndent = defIndent + '    ';
+    lines.splice(funcStartLine + 1, 0,
+        `${bodyIndent}"""complexity ${level}`,
+        `${bodyIndent}"""`
+    );
+}
+
 // ── Edit orchestration ─────────────────────────────────────────────────────────
 
 function editFile(fileInfo) {
@@ -221,13 +251,19 @@ function editFile(fileInfo) {
 
         if (fileInfo.language === 'python') {
             const range = findPythonDocstringRange(lines, func.startLine);
-            if (!range) continue;
-            upsertComplexityTagPython(lines, range, level);
+            if (range) {
+                upsertComplexityTagPython(lines, range, level);
+            } else {
+                addPythonDocstring(lines, func.startLine, level);
+            }
             modified = true;
         } else {
             const range = findDocstringRange(lines, func.startLine);
-            if (!range) continue;
-            upsertComplexityTagJavaLike(lines, range, level);
+            if (range) {
+                upsertComplexityTagJavaLike(lines, range, level);
+            } else {
+                addJavaLikeDocstring(lines, func.startLine, level);
+            }
             modified = true;
         }
     }
@@ -281,7 +317,9 @@ function main() {
                 console.error(`Error analyzing ${file.filePath}: ${err.message}`);
             }
         }
-        console.log(toCsv(allResults));
+        const csvPath = path.resolve('ccm_analysis.csv');
+        fs.writeFileSync(csvPath, toCsv(allResults), 'utf8');
+        console.error(`Results written to ${csvPath}`);
     } else if (command === '--update') {
         let count = 0;
         for (const file of files) {
@@ -312,5 +350,7 @@ module.exports = {
     findPythonDocstringRange,
     upsertComplexityTagJavaLike,
     upsertComplexityTagPython,
+    addJavaLikeDocstring,
+    addPythonDocstring,
     main
 };

@@ -1,4 +1,6 @@
 def noop():
+    """No operation.
+    """
     pass
 
 def do_stuff():

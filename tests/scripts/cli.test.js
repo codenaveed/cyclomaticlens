@@ -103,7 +103,7 @@ describe('CCM CLI - walkDirectory', () => {
     });
 });
 
-// ── analyzeFile tests (uses fixture files) ──────────────────────────────────
+// ── analyzeFile tests ──────────────────────────────────────────────────────
 
 describe('CCM CLI - analyzeFile', () => {
     let tmpDir;
@@ -112,7 +112,7 @@ describe('CCM CLI - analyzeFile', () => {
     afterEach(() => { removeTempDir(tmpDir); });
 
     test('computes CCM for Java file', () => {
-        const filePath = copyFixtureToTemp(tmpDir, 'edit_java_add.java');
+        const filePath = copyFixtureToTemp(tmpDir, 'java/edit_add.java');
         const results = cli.analyzeFile({ filePath, language: 'java' });
         expect(results).toHaveLength(2);
         expect(results[0].function).toBe('add');
@@ -124,7 +124,7 @@ describe('CCM CLI - analyzeFile', () => {
     });
 
     test('computes CCM for Python file', () => {
-        const filePath = copyFixtureToTemp(tmpDir, 'edit_py_add.py');
+        const filePath = copyFixtureToTemp(tmpDir, 'py/edit_add.py');
         const results = cli.analyzeFile({ filePath, language: 'python' });
         expect(results).toHaveLength(2);
         expect(results[0].function).toBe('noop');
@@ -136,7 +136,7 @@ describe('CCM CLI - analyzeFile', () => {
     });
 
     test('computes CCM for C file', () => {
-        const filePath = copyFixtureToTemp(tmpDir, 'edit_c_add.c');
+        const filePath = copyFixtureToTemp(tmpDir, 'c/edit_add.c');
         const results = cli.analyzeFile({ filePath, language: 'c' });
         expect(results).toHaveLength(2);
         expect(results[0].function).toBe('do_stuff');
@@ -157,24 +157,24 @@ describe('CCM CLI - analyzeFile', () => {
 // ── toCsv tests ─────────────────────────────────────────────────────────────
 
 describe('CCM CLI - toCsv', () => {
-    test('outputs header and rows with pipe delimiter', () => {
+    test('outputs header and rows with comma delimiter', () => {
         const results = [
-            { path: '/src', file: 'Foo.java', language: 'java', function: 'bar', ccm: 3, level: 'Low' },
-            { path: '/src', file: 'Baz.java', language: 'java', function: 'qux', ccm: 15, level: 'Medium' }
+            { path: '/src', file: 'Foo.java', function: 'bar', ccm: 3, level: 'Low' },
+            { path: '/src', file: 'Baz.java', function: 'qux', ccm: 15, level: 'Medium' }
         ];
         const csv = cli.toCsv(results);
         const lines = csv.split('\n');
-        expect(lines[0]).toBe('Path|File|Function|CCM|Complexity');
-        expect(lines[1]).toBe('/src|Foo.java|bar|3|Low');
-        expect(lines[2]).toBe('/src|Baz.java|qux|15|Medium');
+        expect(lines[0]).toBe('Path,File,Function,CCM,Complexity');
+        expect(lines[1]).toBe('/src,Foo.java,bar,3,Low');
+        expect(lines[2]).toBe('/src,Baz.java,qux,15,Medium');
     });
 
-    test('escapes pipe characters in function names', () => {
+    test('escapes commas in function names with quotes', () => {
         const results = [
-            { path: '/src', file: 'f.js', language: 'javascript', function: 'a|b', ccm: 1, level: 'Low' }
+            { path: '/src', file: 'f.js', function: 'a,b', ccm: 1, level: 'Low' }
         ];
         const csv = cli.toCsv(results);
-        expect(csv).toContain('a\\|b');
+        expect(csv).toContain('"a,b"');
     });
 });
 
@@ -365,7 +365,7 @@ describe('CCM CLI - upsertComplexityTagPython', () => {
     });
 });
 
-// ── Integration tests: edit mode (uses fixture files) ───────────────────────
+// ── Integration tests: edit mode ───────────────────────────────────────────
 
 describe('CCM CLI - editFile integration', () => {
     let tmpDir;
@@ -373,78 +373,178 @@ describe('CCM CLI - editFile integration', () => {
     beforeEach(() => { tmpDir = createTempDir(); });
     afterEach(() => { removeTempDir(tmpDir); });
 
-    test('Java: adds @complexity tag to docstring', () => {
-        const filePath = copyFixtureToTemp(tmpDir, 'edit_java_add.java');
+    test('Java: adds @complexity tag to all functions with docstrings', () => {
+        const filePath = copyFixtureToTemp(tmpDir, 'java/edit_add.java');
         cli.editFile({ filePath, language: 'java' });
         const edited = fs.readFileSync(filePath, 'utf8');
         expect(edited).toContain('* @complexity Low');
+        expect((edited.match(/@complexity Low/g) || []).length).toBe(2);
     });
 
     test('Java: overwrites existing @complexity tag', () => {
-        const filePath = copyFixtureToTemp(tmpDir, 'edit_java_overwrite.java');
+        const filePath = copyFixtureToTemp(tmpDir, 'java/edit_overwrite.java');
         cli.editFile({ filePath, language: 'java' });
         const edited = fs.readFileSync(filePath, 'utf8');
         expect(edited).toContain('* @complexity Low');
+        expect((edited.match(/@complexity Low/g) || []).length).toBe(2);
         expect(edited).not.toContain('@complexity High');
     });
 
     test('Java: adds tag before */ when no tags exist', () => {
-        const filePath = copyFixtureToTemp(tmpDir, 'edit_java_notags.java');
+        const filePath = copyFixtureToTemp(tmpDir, 'java/edit_notags.java');
         cli.editFile({ filePath, language: 'java' });
         const edited = fs.readFileSync(filePath, 'utf8');
-        expect(edited).toContain('* @complexity Low');
+        expect((edited.match(/@complexity Low/g) || []).length).toBe(2);
     });
 
-    test('JavaScript: adds @complexity tag', () => {
-        const filePath = copyFixtureToTemp(tmpDir, 'edit_js_add.js');
+    test('Java: adds docstring + tag to undocumented functions', () => {
+        const filePath = copyFixtureToTemp(tmpDir, 'java/edit_nodoc.java');
+        cli.editFile({ filePath, language: 'java' });
+        const edited = fs.readFileSync(filePath, 'utf8');
+        expect(edited).toContain('/**');
+        expect(edited).toContain('@complexity Low');
+        expect(edited).toContain('public int add');
+        expect(edited).toContain('public int multiply');
+    });
+
+    test('Java: handles multiple functions with different CCM levels', () => {
+        const filePath = copyFixtureToTemp(tmpDir, 'java/edit_multi.java');
+        cli.editFile({ filePath, language: 'java' });
+        const edited = fs.readFileSync(filePath, 'utf8');
+        expect(edited).toContain('@complexity Low');
+        expect(edited).toContain('@complexity Medium');
+    });
+
+    test('JavaScript: adds @complexity tag to all functions', () => {
+        const filePath = copyFixtureToTemp(tmpDir, 'js/edit_add.js');
         cli.editFile({ filePath, language: 'javascript' });
         const edited = fs.readFileSync(filePath, 'utf8');
-        expect(edited).toContain('* @complexity Low');
+        expect((edited.match(/@complexity Low/g) || []).length).toBe(2);
     });
 
-    test('TypeScript: adds @complexity tag', () => {
-        const filePath = copyFixtureToTemp(tmpDir, 'edit_ts_add.ts');
+    test('JavaScript: overwrites existing @complexity tag', () => {
+        const filePath = copyFixtureToTemp(tmpDir, 'js/edit_overwrite.js');
+        cli.editFile({ filePath, language: 'javascript' });
+        const edited = fs.readFileSync(filePath, 'utf8');
+        expect(edited).toContain('@complexity Low');
+        expect(edited).not.toContain('@complexity High');
+    });
+
+    test('JavaScript: adds docstring + tag to undocumented functions', () => {
+        const filePath = copyFixtureToTemp(tmpDir, 'js/edit_nodoc.js');
+        cli.editFile({ filePath, language: 'javascript' });
+        const edited = fs.readFileSync(filePath, 'utf8');
+        expect(edited).toContain('/**');
+        expect(edited).toContain('@complexity Low');
+        expect(edited).toContain('function doStuff');
+        expect(edited).toContain('function noop');
+    });
+
+    test('JavaScript: handles multiple functions with different CCM levels', () => {
+        const filePath = copyFixtureToTemp(tmpDir, 'js/edit_multi.js');
+        cli.editFile({ filePath, language: 'javascript' });
+        const edited = fs.readFileSync(filePath, 'utf8');
+        expect(edited).toContain('@complexity Low');
+        expect(edited).toContain('@complexity Medium');
+    });
+
+    test('TypeScript: adds @complexity tag to all functions', () => {
+        const filePath = copyFixtureToTemp(tmpDir, 'ts/edit_add.ts');
         cli.editFile({ filePath, language: 'typescript' });
         const edited = fs.readFileSync(filePath, 'utf8');
-        expect(edited).toContain('* @complexity Low');
+        expect((edited.match(/@complexity Low/g) || []).length).toBe(2);
     });
 
-    test('C: adds @complexity tag', () => {
-        const filePath = copyFixtureToTemp(tmpDir, 'edit_c_add.c');
+    test('TypeScript: overwrites existing @complexity tag', () => {
+        const filePath = copyFixtureToTemp(tmpDir, 'ts/edit_overwrite.ts');
+        cli.editFile({ filePath, language: 'typescript' });
+        const edited = fs.readFileSync(filePath, 'utf8');
+        expect(edited).toContain('@complexity Low');
+        expect(edited).not.toContain('@complexity High');
+    });
+
+    test('TypeScript: adds docstring + tag to undocumented functions', () => {
+        const filePath = copyFixtureToTemp(tmpDir, 'ts/edit_nodoc.ts');
+        cli.editFile({ filePath, language: 'typescript' });
+        const edited = fs.readFileSync(filePath, 'utf8');
+        expect(edited).toContain('/**');
+        expect(edited).toContain('@complexity Low');
+        expect(edited).toContain('function doStuff');
+        expect(edited).toContain('function noop');
+    });
+
+    test('TypeScript: handles multiple functions with different CCM levels', () => {
+        const filePath = copyFixtureToTemp(tmpDir, 'ts/edit_multi.ts');
+        cli.editFile({ filePath, language: 'typescript' });
+        const edited = fs.readFileSync(filePath, 'utf8');
+        expect(edited).toContain('@complexity Low');
+        expect(edited).toContain('@complexity Medium');
+    });
+
+    test('C: adds @complexity tag to all functions', () => {
+        const filePath = copyFixtureToTemp(tmpDir, 'c/edit_add.c');
         cli.editFile({ filePath, language: 'c' });
         const edited = fs.readFileSync(filePath, 'utf8');
-        expect(edited).toContain('* @complexity Low');
+        expect((edited.match(/@complexity Low/g) || []).length).toBe(2);
     });
 
-    test('Python: adds complexity line to docstring', () => {
-        const filePath = copyFixtureToTemp(tmpDir, 'edit_py_add.py');
-        cli.editFile({ filePath, language: 'python' });
+    test('C: overwrites existing @complexity tag', () => {
+        const filePath = copyFixtureToTemp(tmpDir, 'c/edit_overwrite.c');
+        cli.editFile({ filePath, language: 'c' });
         const edited = fs.readFileSync(filePath, 'utf8');
-        expect(edited).toContain('complexity Low');
+        expect(edited).toContain('@complexity Low');
+        expect(edited).not.toContain('@complexity High');
     });
 
-    test('Python: overwrites existing complexity line', () => {
-        const filePath = copyFixtureToTemp(tmpDir, 'edit_py_overwrite.py');
-        cli.editFile({ filePath, language: 'python' });
+    test('C: adds docstring + tag to undocumented functions', () => {
+        const filePath = copyFixtureToTemp(tmpDir, 'c/edit_nodoc.c');
+        cli.editFile({ filePath, language: 'c' });
         const edited = fs.readFileSync(filePath, 'utf8');
-        expect(edited).toContain('complexity Low');
-        expect(edited).not.toContain('Very High');
+        expect(edited).toContain('/**');
+        expect(edited).toContain('@complexity Low');
+        expect(edited).toContain('int foo()');
+        expect(edited).toContain('int bar()');
     });
 
-    test('processes multiple functions in a file bottom-to-top', () => {
-        const filePath = copyFixtureToTemp(tmpDir, 'edit_c_multi.c');
+    test('C: handles multiple functions with different CCM levels', () => {
+        const filePath = copyFixtureToTemp(tmpDir, 'c/edit_multi.c');
         cli.editFile({ filePath, language: 'c' });
         const edited = fs.readFileSync(filePath, 'utf8');
         expect(edited).toContain('@complexity Low');
         expect(edited).toContain('@complexity Medium');
     });
 
-    test('does not modify file without docstrings', () => {
-        const filePath = copyFixtureToTemp(tmpDir, 'edit_c_nodoc.c');
-        const before = fs.readFileSync(filePath, 'utf8');
-        cli.editFile({ filePath, language: 'c' });
-        const after = fs.readFileSync(filePath, 'utf8');
-        expect(after).toBe(before);
+    test('Python: adds complexity line to all docstrings', () => {
+        const filePath = copyFixtureToTemp(tmpDir, 'py/edit_add.py');
+        cli.editFile({ filePath, language: 'python' });
+        const edited = fs.readFileSync(filePath, 'utf8');
+        expect(edited).toContain('complexity Low');
+        expect((edited.match(/complexity Low/g) || []).length).toBe(2);
+    });
+
+    test('Python: overwrites existing complexity line', () => {
+        const filePath = copyFixtureToTemp(tmpDir, 'py/edit_overwrite.py');
+        cli.editFile({ filePath, language: 'python' });
+        const edited = fs.readFileSync(filePath, 'utf8');
+        expect(edited).toContain('complexity Low');
+        expect(edited).not.toContain('Very High');
+    });
+
+    test('Python: adds docstring + tag to undocumented functions', () => {
+        const filePath = copyFixtureToTemp(tmpDir, 'py/edit_nodoc.py');
+        cli.editFile({ filePath, language: 'python' });
+        const edited = fs.readFileSync(filePath, 'utf8');
+        expect(edited).toContain('"""complexity Low');
+        expect(edited).toContain('def noop()');
+        expect(edited).toContain('def do_stuff(x)');
+    });
+
+    test('Python: handles multiple functions with different CCM levels', () => {
+        const filePath = copyFixtureToTemp(tmpDir, 'py/edit_multi.py');
+        cli.editFile({ filePath, language: 'python' });
+        const edited = fs.readFileSync(filePath, 'utf8');
+        expect(edited).toContain('complexity Low');
+        expect(edited).toContain('complexity Medium');
     });
 
     test('recursively processes files across languages and depth', () => {
@@ -463,7 +563,7 @@ describe('CCM CLI - editFile integration', () => {
     });
 });
 
-// ── End-to-end analyze via directory (uses fixture files) ───────────────────
+// ── End-to-end analyze via directory ───────────────────────────────────────
 
 describe('CCM CLI - end-to-end analyze via directory', () => {
     let tmpDir;
@@ -478,11 +578,11 @@ describe('CCM CLI - end-to-end analyze via directory', () => {
         const csv = cli.toCsv(allResults);
         const lines = csv.split('\n').filter(l => l);
 
-        expect(lines[0]).toBe('Path|File|Function|CCM|Complexity');
+        expect(lines[0]).toBe('Path,File,Function,CCM,Complexity');
         expect(lines.length).toBe(4);
         const dataLines = lines.slice(1).sort();
-        expect(dataLines[0]).toMatch(/\|Bar\.java\|loop\|2\|Low$/);
-        expect(dataLines[1]).toMatch(/\|Foo\.java\|branch\|2\|Low$/);
-        expect(dataLines[2]).toMatch(/\|Foo\.java\|simple\|1\|Low$/);
+        expect(dataLines[0]).toMatch(/,Bar.java,loop,2,Low$/);
+        expect(dataLines[1]).toMatch(/,Foo.java,branch,2,Low$/);
+        expect(dataLines[2]).toMatch(/,Foo.java,simple,1,Low$/);
     });
 });
