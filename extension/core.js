@@ -312,6 +312,19 @@ function removeComments(code) {
 }
 
 /**
+ * Map a numeric CCM score to a human-readable level label
+ * @param {number} score - The cyclomatic complexity score
+ * @returns {string} Level label: Low, Medium, High, Very High, Critical
+ */
+function getLevel(score) {
+    if (score <= 10) return 'Low';
+    if (score <= 20) return 'Medium';
+    if (score <= 30) return 'High';
+    if (score <= 50) return 'Very High';
+    return 'Critical';
+}
+
+/**
  * Calculate cyclomatic complexity of a function body
  * @param {string} functionBody - The function body code
  * @param {string} language - The programming language ('c', 'java', 'javascript', 'typescript', 'python')
@@ -420,5 +433,6 @@ module.exports = {
     parseJavaFunctions,
     parseJavaScriptFunctions,
     parsePythonFunctions,
-    calculateComplexity
+    calculateComplexity,
+    getLevel
 };

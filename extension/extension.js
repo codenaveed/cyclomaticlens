@@ -132,17 +132,9 @@ function analyzeAndDecorate(editor) {
 }
 
 function getComplexityStyle(complexity) {
-    if (complexity <= 10) {
-        return {label: 'Low', color: '#4EC9B0' };  // Green
-    } else if (complexity <= 20) {
-        return {label: 'Medium', color: '#dce400' };  // Yellow
-    } else if (complexity <= 30) {
-        return {label: 'High', color: '#e9781c' };  // Orange
-    } else if (complexity <= 50) {
-        return {label: 'Very High', color: '#F44747' };  // Red
-    } else {
-        return {label: 'Critical', color: '#F44747' };  // Red
-    }
+    const label = coreAnalyzer.getLevel(complexity);
+    const colors = { 'Low': '#4EC9B0', 'Medium': '#dce400', 'High': '#e9781c', 'Very High': '#F44747', 'Critical': '#F44747' };
+    return { label, color: colors[label] };
 }
 
 function deactivate() {
