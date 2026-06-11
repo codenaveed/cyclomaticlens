@@ -1,5 +1,7 @@
 const vscode = require('vscode');
+const path = require('path');
 const coreAnalyzer = require('./core.js');
+const cli = require('./cli.js');
 
 /**
  * Cyclomatic Complexity Analyzer - Simple & Clean
@@ -49,12 +51,105 @@ function activate(context) {
     if (vscode.window.activeTextEditor && isSupportedFile(vscode.window.activeTextEditor.document)) {
         analyzeAndDecorate(vscode.window.activeTextEditor);
     }
+
+    // ── Command: CCM Analyze ────────────────────────────────────────────────
+    context.subscriptions.push(vscode.commands.registerCommand('cyclomaticlens.analyze', async () => {
+        const target = await resolveTargetPath();
+        if (!target) return;
+
+        const files = cli.walkDirectory(target);
+        if (files.length === 0) {
+            vscode.window.showInformationMessage('No supported files found');
+            return;
+        }
+
+        let allResults = [];
+        for (const file of files) {
+            try {
+                const results = cli.analyzeFile(file);
+                allResults.push(...results);
+            } catch (err) {
+                // skip problematic files
+            }
+        }
+
+        if (allResults.length === 0) {
+            vscode.window.showInformationMessage('No functions found');
+            return;
+        }
+
+        const root = getWorkspaceRoot();
+        const csvPath = path.join(root, 'ccm_analysis.csv');
+        const fs = require('fs');
+        fs.writeFileSync(csvPath, cli.toCsv(allResults), 'utf8');
+
+        const output = vscode.window.createOutputChannel('Cyclomatic Lens');
+        output.clear();
+        output.appendLine(`CCM Analysis — ${files.length} file(s), ${allResults.length} function(s)\n`);
+        output.appendLine(cli.toCsv(allResults));
+        output.show();
+        vscode.window.showInformationMessage(`Results written to ${csvPath}`);
+    }));
+
+    // ── Command: CCM Update Tags ────────────────────────────────────────────
+    context.subscriptions.push(vscode.commands.registerCommand('cyclomaticlens.update', async () => {
+        const target = await resolveTargetPath();
+        if (!target) return;
+
+        const files = cli.walkDirectory(target);
+        if (files.length === 0) {
+            vscode.window.showInformationMessage('No supported files found');
+            return;
+        }
+
+        let count = 0;
+        for (const file of files) {
+            try {
+                cli.editFile(file);
+                count++;
+            } catch (err) {
+                // skip problematic files
+            }
+        }
+
+        vscode.window.showInformationMessage(`Updated ${count} file(s)`);
+    }));
 }
 
 function isSupportedFile(document) {
     let language = getLanguage(document);
     return (language==='c' || language==='java' || language==='javascript' || 
             language==='typescript' || language==='python');
+}
+
+function getWorkspaceRoot() {
+    const folders = vscode.workspace.workspaceFolders;
+    if (!folders || folders.length === 0) {
+        vscode.window.showErrorMessage('No workspace folder open');
+        return null;
+    }
+    return folders[0].uri.fsPath;
+}
+
+async function resolveTargetPath() {
+    const root = getWorkspaceRoot();
+    if (!root) return null;
+
+    const input = await vscode.window.showInputBox({
+        prompt: 'Enter path (absolute or relative to workspace root)',
+        placeHolder: 'e.g. src/ or /Users/me/project/src'
+    });
+
+    if (!input) return null; // cancelled or empty
+
+    const resolved = path.isAbsolute(input) ? input : path.resolve(root, input);
+
+    if (!require('fs').existsSync(resolved)) {
+        vscode.window.showErrorMessage(`Path not found: ${resolved}`);
+        return null;
+    }
+
+    return resolved;
 }
 
 function getLanguage(document) {
@@ -150,6 +245,9 @@ module.exports = {
     parseCFunctions: coreAnalyzer.parseCFunctions,
     parseJavaFunctions: coreAnalyzer.parseJavaFunctions,
     parseJavaScriptFunctions: coreAnalyzer.parseJavaScriptFunctions,
-    parsePythonFunctions: coreAnalyzer.parsePythonFunctions
+    parsePythonFunctions: coreAnalyzer.parsePythonFunctions,
+    analyzeFile: cli.analyzeFile,
+    editFile: cli.editFile,
+    toCsv: cli.toCsv
 };
 

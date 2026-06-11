@@ -30,6 +30,12 @@ A Visual Studio Code extension that computes and displays cyclomatic complexity 
 - **Efficient parsing**: Minimal impact on editor responsiveness
 - **Zero configuration**: Works out of the box
 
+### ⌨️ Command Palette
+- **CCM: Analyze** — Compute cyclomatic complexity for all supported files under a given path (file or directory). Results are saved as `ccm_analysis.csv` in the workspace root and displayed in an output panel.
+- **CCM: Update Tags** — Insert or update `@complexity <Level>` docstring tags for all functions across all supported files under a given path. 
+
+Both commands prompt for a path (absolute or relative to the workspace root).
+
 ## How It Works
 
 ### Complexity Calculation
