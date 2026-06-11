@@ -608,4 +608,55 @@ describe('CCM CLI - editFile integration', () => {
     });
 });
 
+describe('CCM CLI - tag ordering with existing tags', () => {
+    let tmpDir;
+
+    beforeEach(() => { tmpDir = createTempDir(); });
+    afterEach(() => { removeTempDir(tmpDir); });
+
+    test('C: places @complexity after the last existing tag', () => {
+        const filePath = copyFixtureToTemp(tmpDir, 'c/edit_tags.c');
+        cli.editFile({ filePath, language: 'c' });
+        const edited = fs.readFileSync(filePath, 'utf8');
+        expect(edited.indexOf('@complexity Low')).toBeGreaterThan(edited.indexOf('@return'));
+    });
+
+    test('C++: places @complexity after the last existing tag', () => {
+        const filePath = copyFixtureToTemp(tmpDir, 'cpp/edit_tags.cpp');
+        cli.editFile({ filePath, language: 'c' });
+        const edited = fs.readFileSync(filePath, 'utf8');
+        expect(edited.indexOf('@complexity Low')).toBeGreaterThan(edited.indexOf('@return'));
+    });
+
+    test('Java: places @complexity after the last existing tag', () => {
+        const filePath = copyFixtureToTemp(tmpDir, 'java/edit_tags.java');
+        cli.editFile({ filePath, language: 'java' });
+        const edited = fs.readFileSync(filePath, 'utf8');
+        expect(edited.indexOf('@complexity Low')).toBeGreaterThan(edited.indexOf('@return'));
+    });
+
+    test('JavaScript: places @complexity after the last existing tag', () => {
+        const filePath = copyFixtureToTemp(tmpDir, 'js/edit_tags.js');
+        cli.editFile({ filePath, language: 'javascript' });
+        const edited = fs.readFileSync(filePath, 'utf8');
+        expect(edited.indexOf('@complexity Low')).toBeGreaterThan(edited.indexOf('@returns'));
+    });
+
+    test('TypeScript: places @complexity after the last existing tag', () => {
+        const filePath = copyFixtureToTemp(tmpDir, 'ts/edit_tags.ts');
+        cli.editFile({ filePath, language: 'typescript' });
+        const edited = fs.readFileSync(filePath, 'utf8');
+        expect(edited.indexOf('@complexity Low')).toBeGreaterThan(edited.indexOf('@returns'));
+    });
+
+    test('Python: places complexity before closing quotes', () => {
+        const filePath = copyFixtureToTemp(tmpDir, 'py/edit_tags.py');
+        cli.editFile({ filePath, language: 'python' });
+        const edited = fs.readFileSync(filePath, 'utf8');
+        expect(edited.indexOf('complexity Low')).toBeGreaterThan(edited.indexOf('Returns:'));
+        const lastClose = edited.lastIndexOf('"""');
+        expect(edited.indexOf('complexity Low')).toBeLessThan(lastClose);
+    });
+});
+
 
