@@ -69,10 +69,10 @@ function analyzeFile(fileInfo) {
 }
 
 function toCsv(results) {
-    const header = 'Path|File|Language|Function|CCM|Complexity';
+    const header = 'Path|File|Function|CCM|Complexity';
     const rows = results.map(r => {
         const safeFn = String(r.function).replace(/\|/g, '\\|');
-        return `${r.path}|${r.file}|${r.language}|${safeFn}|${r.ccm}|${r.level}`;
+        return `${r.path}|${r.file}|${safeFn}|${r.ccm}|${r.level}`;
     });
     return [header, ...rows].join('\n');
 }
@@ -242,7 +242,7 @@ function editFile(fileInfo) {
 function main() {
     const args = process.argv.slice(2);
     if (args.length < 2) {
-        console.error('Usage: node cli.js <analyze|edit> <path>');
+        console.error('Usage: node cli.js --analyze|--update <path>');
         process.exit(1);
     }
 
@@ -271,7 +271,7 @@ function main() {
         process.exit(0);
     }
 
-    if (command === 'analyze') {
+    if (command === '--analyze') {
         let allResults = [];
         for (const file of files) {
             try {
@@ -282,7 +282,7 @@ function main() {
             }
         }
         console.log(toCsv(allResults));
-    } else if (command === 'edit') {
+    } else if (command === '--update') {
         let count = 0;
         for (const file of files) {
             try {
@@ -294,7 +294,7 @@ function main() {
         }
         console.error(`Processed ${count} file(s).`);
     } else {
-        console.error(`Unknown command: ${command}. Use 'analyze' or 'edit'.`);
+        console.error(`Unknown command: ${command}. Use '--analyze' or '--update'.`);
         process.exit(1);
     }
 }

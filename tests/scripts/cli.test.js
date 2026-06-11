@@ -164,9 +164,9 @@ describe('CCM CLI - toCsv', () => {
         ];
         const csv = cli.toCsv(results);
         const lines = csv.split('\n');
-        expect(lines[0]).toBe('Path|File|Language|Function|CCM|Complexity');
-        expect(lines[1]).toBe('/src|Foo.java|java|bar|3|Low');
-        expect(lines[2]).toBe('/src|Baz.java|java|qux|15|Medium');
+        expect(lines[0]).toBe('Path|File|Function|CCM|Complexity');
+        expect(lines[1]).toBe('/src|Foo.java|bar|3|Low');
+        expect(lines[2]).toBe('/src|Baz.java|qux|15|Medium');
     });
 
     test('escapes pipe characters in function names', () => {
@@ -478,11 +478,11 @@ describe('CCM CLI - end-to-end analyze via directory', () => {
         const csv = cli.toCsv(allResults);
         const lines = csv.split('\n').filter(l => l);
 
-        expect(lines[0]).toBe('Path|File|Language|Function|CCM|Complexity');
+        expect(lines[0]).toBe('Path|File|Function|CCM|Complexity');
         expect(lines.length).toBe(4);
         const dataLines = lines.slice(1).sort();
-        expect(dataLines[0]).toMatch(/\|Bar\.java\|java\|loop\|2\|Low$/);
-        expect(dataLines[1]).toMatch(/\|Foo\.java\|java\|branch\|2\|Low$/);
-        expect(dataLines[2]).toMatch(/\|Foo\.java\|java\|simple\|1\|Low$/);
+        expect(dataLines[0]).toMatch(/\|Bar\.java\|loop\|2\|Low$/);
+        expect(dataLines[1]).toMatch(/\|Foo\.java\|branch\|2\|Low$/);
+        expect(dataLines[2]).toMatch(/\|Foo\.java\|simple\|1\|Low$/);
     });
 });
