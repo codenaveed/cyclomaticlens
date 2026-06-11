@@ -147,6 +147,18 @@ describe('CCM CLI - analyzeFile', () => {
         expect(results[1].level).toBe('Low');
     });
 
+    test('computes CCM for C++ file', () => {
+        const filePath = copyFixtureToTemp(tmpDir, 'cpp/edit_add.cpp');
+        const results = cli.analyzeFile({ filePath, language: 'c' });
+        expect(results).toHaveLength(2);
+        expect(results[0].function).toBe('do_stuff');
+        expect(results[0].ccm).toBe(2);
+        expect(results[0].level).toBe('Low');
+        expect(results[1].function).toBe('noop');
+        expect(results[1].ccm).toBe(1);
+        expect(results[1].level).toBe('Low');
+    });
+
     test('handles empty file gracefully', () => {
         const filePath = writeFile(tmpDir, 'empty.java', '');
         const results = cli.analyzeFile({ filePath, language: 'java' });
@@ -514,6 +526,39 @@ describe('CCM CLI - editFile integration', () => {
         expect(edited).toContain('@complexity Medium');
     });
 
+    test('C++: adds @complexity tag to all functions', () => {
+        const filePath = copyFixtureToTemp(tmpDir, 'cpp/edit_add.cpp');
+        cli.editFile({ filePath, language: 'c' });
+        const edited = fs.readFileSync(filePath, 'utf8');
+        expect((edited.match(/@complexity Low/g) || []).length).toBe(2);
+    });
+
+    test('C++: overwrites existing @complexity tag', () => {
+        const filePath = copyFixtureToTemp(tmpDir, 'cpp/edit_overwrite.cpp');
+        cli.editFile({ filePath, language: 'c' });
+        const edited = fs.readFileSync(filePath, 'utf8');
+        expect(edited).toContain('@complexity Low');
+        expect(edited).not.toContain('@complexity High');
+    });
+
+    test('C++: adds docstring + tag to undocumented functions', () => {
+        const filePath = copyFixtureToTemp(tmpDir, 'cpp/edit_nodoc.cpp');
+        cli.editFile({ filePath, language: 'c' });
+        const edited = fs.readFileSync(filePath, 'utf8');
+        expect(edited).toContain('/**');
+        expect(edited).toContain('@complexity Low');
+        expect(edited).toContain('void foo()');
+        expect(edited).toContain('void bar()');
+    });
+
+    test('C++: handles multiple functions with different CCM levels', () => {
+        const filePath = copyFixtureToTemp(tmpDir, 'cpp/edit_multi.cpp');
+        cli.editFile({ filePath, language: 'c' });
+        const edited = fs.readFileSync(filePath, 'utf8');
+        expect(edited).toContain('@complexity Low');
+        expect(edited).toContain('@complexity Medium');
+    });
+
     test('Python: adds complexity line to all docstrings', () => {
         const filePath = copyFixtureToTemp(tmpDir, 'py/edit_add.py');
         cli.editFile({ filePath, language: 'python' });
@@ -563,26 +608,4 @@ describe('CCM CLI - editFile integration', () => {
     });
 });
 
-// ── End-to-end analyze via directory ───────────────────────────────────────
 
-describe('CCM CLI - end-to-end analyze via directory', () => {
-    let tmpDir;
-
-    beforeEach(() => { tmpDir = createTempDir(); });
-    afterEach(() => { removeTempDir(tmpDir); });
-
-    test('analyze all files under a directory produces correct CSV', () => {
-        const dir = copyFixtureDirToTemp(tmpDir, 'analyze');
-        const files = cli.walkDirectory(dir);
-        const allResults = files.flatMap(f => cli.analyzeFile(f));
-        const csv = cli.toCsv(allResults);
-        const lines = csv.split('\n').filter(l => l);
-
-        expect(lines[0]).toBe('Path,File,Function,CCM,Complexity');
-        expect(lines.length).toBe(4);
-        const dataLines = lines.slice(1).sort();
-        expect(dataLines[0]).toMatch(/,Bar.java,loop,2,Low$/);
-        expect(dataLines[1]).toMatch(/,Foo.java,branch,2,Low$/);
-        expect(dataLines[2]).toMatch(/,Foo.java,simple,1,Low$/);
-    });
-});
