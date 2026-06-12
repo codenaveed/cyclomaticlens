@@ -176,7 +176,7 @@ function upsertComplexityTagJavaLike(lines, range, level) {
         const nameMatch = lines[existingComplexity].trim().match(/^(\*\s*@complexity\s*).*/i);
         const prefix = nameMatch ? nameMatch[1] : '* @complexity ';
         const replacement = `${indent}${prefix}${level}`;
-        if (lines[existingComplexity] !== replacement) {
+        if (lines[existingComplexity].trimEnd() !== replacement) {
             lines[existingComplexity] = replacement;
         }
         return;
@@ -209,7 +209,7 @@ function upsertComplexityTagPython(lines, range, level) {
     if (existingComplexity !== -1) {
         const indent = lines[existingComplexity].match(/^(\s*)/)[0];
         const replacement = `${indent}complexity ${level}`;
-        if (lines[existingComplexity] !== replacement) {
+        if (lines[existingComplexity].trimEnd() !== replacement) {
             lines[existingComplexity] = replacement;
         }
         return;

@@ -710,6 +710,13 @@ describe('CCM CLI - tag ordering with existing tags', () => {
             cli.upsertComplexityTagJavaLike(lines, { startLine: 1, endLine: 3 }, 'Low');
             expect(lines).toEqual(copy);
         });
+
+        test('skips array mutation when trailing whitespace after level value', () => {
+            const lines = ['', '/**', ' * @complexity Low ', ' */', 'void f() {}'];
+            const copy = [...lines];
+            cli.upsertComplexityTagJavaLike(lines, { startLine: 1, endLine: 3 }, 'Low');
+            expect(lines).toEqual(copy);
+        });
     });
 
     describe('CCM CLI - upsertComplexityTagPython guard', () => {
@@ -730,6 +737,13 @@ describe('CCM CLI - tag ordering with existing tags', () => {
             const lines = ['def foo():', '    """docstring', '    complexity  Low', '    """', '    pass'];
             cli.upsertComplexityTagPython(lines, { startLine: 1, endLine: 3 }, 'Low');
             expect(lines[2]).toBe('    complexity Low');
+        });
+
+        test('skips array mutation when trailing whitespace after level value', () => {
+            const lines = ['def foo():', '    """docstring', '    complexity Low ', '    """', '    pass'];
+            const copy = [...lines];
+            cli.upsertComplexityTagPython(lines, { startLine: 1, endLine: 3 }, 'Low');
+            expect(lines).toEqual(copy);
         });
     });
 
