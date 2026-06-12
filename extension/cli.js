@@ -243,7 +243,6 @@ function editFile(fileInfo) {
     const parseFn = LANGUAGE_PARSER_MAP[fileInfo.language];
     const functions = parseFn(sourceCode);
 
-    let modified = false;
     for (let idx = functions.length - 1; idx >= 0; idx--) {
         const func = functions[idx];
         const ccm = core.calculateComplexity(func.body, fileInfo.language);
@@ -256,7 +255,6 @@ function editFile(fileInfo) {
             } else {
                 addPythonDocstring(lines, func.startLine, level);
             }
-            modified = true;
         } else {
             const range = findDocstringRange(lines, func.startLine);
             if (range) {
@@ -264,12 +262,12 @@ function editFile(fileInfo) {
             } else {
                 addJavaLikeDocstring(lines, func.startLine, level);
             }
-            modified = true;
         }
     }
 
-    if (modified) {
-        fs.writeFileSync(fileInfo.filePath, lines.join('\n'), 'utf8');
+    const modified = lines.join('\n');
+    if (modified !== sourceCode) {
+        fs.writeFileSync(fileInfo.filePath, modified, 'utf8');
     }
 }
 

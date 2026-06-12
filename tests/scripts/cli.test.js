@@ -606,6 +606,38 @@ describe('CCM CLI - editFile integration', () => {
             expect(edited).toContain('@complexity Low');
         }
     });
+
+    const runNoEditTest = (fixturePath, language) => {
+        const filePath = copyFixtureToTemp(tmpDir, fixturePath);
+        const before = fs.readFileSync(filePath, 'utf8');
+        cli.editFile({ filePath, language });
+        const after = fs.readFileSync(filePath, 'utf8');
+        expect(after).toBe(before);
+    };
+
+    test('C: no edit when tags already correct', () => {
+        runNoEditTest('c/edit_noedit.c', 'c');
+    });
+
+    test('C++: no edit when tags already correct', () => {
+        runNoEditTest('cpp/edit_noedit.cpp', 'c');
+    });
+
+    test('Java: no edit when tags already correct', () => {
+        runNoEditTest('java/edit_noedit.java', 'java');
+    });
+
+    test('JavaScript: no edit when tags already correct', () => {
+        runNoEditTest('js/edit_noedit.js', 'javascript');
+    });
+
+    test('TypeScript: no edit when tags already correct', () => {
+        runNoEditTest('ts/edit_noedit.ts', 'typescript');
+    });
+
+    test('Python: no edit when tags already correct', () => {
+        runNoEditTest('py/edit_noedit.py', 'python');
+    });
 });
 
 describe('CCM CLI - tag ordering with existing tags', () => {
