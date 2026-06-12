@@ -2,6 +2,11 @@
 
 All notable changes to the Cyclomatic Lens extension will be documented in this file.
 
+## [1.0.6] - Improvement
+
+### Changed
+- **Tag Normalization**: Fixed an issue when extension still writes ccm tags even if tags are already present
+
 ## [1.0.5] - Bug Fix
 ### Changed
 - **Idempotent Writes**: Fixed an issue where the extension would rewrite files even if the tags were already correct, preventing unnecessary file changes.

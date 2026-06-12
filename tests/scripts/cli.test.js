@@ -689,6 +689,50 @@ describe('CCM CLI - tag ordering with existing tags', () => {
         const lastClose = edited.lastIndexOf('"""');
         expect(edited.indexOf('complexity Low')).toBeLessThan(lastClose);
     });
+
+    describe('CCM CLI - upsertComplexityTagJavaLike guard', () => {
+        test('skips array mutation when tag already correct', () => {
+            const lines = ['', '/**', ' * @complexity Low', ' */', 'void f() {}'];
+            const copy = [...lines];
+            cli.upsertComplexityTagJavaLike(lines, { startLine: 1, endLine: 3 }, 'Low');
+            expect(lines).toEqual(copy);
+        });
+
+        test('mutates array when tag differs', () => {
+            const lines = ['', '/**', ' * @complexity High', ' */', 'void f() {}'];
+            cli.upsertComplexityTagJavaLike(lines, { startLine: 1, endLine: 3 }, 'Low');
+            expect(lines[2]).toBe(' * @complexity Low');
+        });
+
+        test('skips array mutation for tag with extra whitespace around value', () => {
+            const lines = ['', '/**', ' * @complexity  Low', ' */', 'void f() {}'];
+            const copy = [...lines];
+            cli.upsertComplexityTagJavaLike(lines, { startLine: 1, endLine: 3 }, 'Low');
+            expect(lines).toEqual(copy);
+        });
+    });
+
+    describe('CCM CLI - upsertComplexityTagPython guard', () => {
+        test('skips array mutation when tag already correct', () => {
+            const lines = ['def foo():', '    """docstring', '    complexity Low', '    """', '    pass'];
+            const copy = [...lines];
+            cli.upsertComplexityTagPython(lines, { startLine: 1, endLine: 3 }, 'Low');
+            expect(lines).toEqual(copy);
+        });
+
+        test('mutates array when tag differs', () => {
+            const lines = ['def foo():', '    """docstring', '    complexity High', '    """', '    pass'];
+            cli.upsertComplexityTagPython(lines, { startLine: 1, endLine: 3 }, 'Low');
+            expect(lines[2]).toBe('    complexity Low');
+        });
+
+        test('normalizes extra whitespace around value in Python tag', () => {
+            const lines = ['def foo():', '    """docstring', '    complexity  Low', '    """', '    pass'];
+            cli.upsertComplexityTagPython(lines, { startLine: 1, endLine: 3 }, 'Low');
+            expect(lines[2]).toBe('    complexity Low');
+        });
+    });
+
 });
 
 
