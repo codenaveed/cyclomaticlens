@@ -2,6 +2,10 @@
 
 All notable changes to the Cyclomatic Lens extension will be documented in this file.
 
+## [1.0.4] - Improvement
+## Changed
+- Improve CLI and Extension integration for reusability
+
 ## [1.0.3] - Feature
 ### Added
 - **Command Palette Integration**: Users can now run analyze and tag commands from the Command Palette

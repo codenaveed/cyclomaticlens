@@ -57,22 +57,7 @@ function activate(context) {
         const target = await resolveTargetPath();
         if (!target) return;
 
-        const files = cli.walkDirectory(target);
-        if (files.length === 0) {
-            vscode.window.showInformationMessage('No supported files found');
-            return;
-        }
-
-        let allResults = [];
-        for (const file of files) {
-            try {
-                const results = cli.analyzeFile(file);
-                allResults.push(...results);
-            } catch (err) {
-                // skip problematic files
-            }
-        }
-
+        const allResults = cli.analyzeDirectory(target);
         if (allResults.length === 0) {
             vscode.window.showInformationMessage('No functions found');
             return;
@@ -85,7 +70,7 @@ function activate(context) {
 
         const output = vscode.window.createOutputChannel('Cyclomatic Lens');
         output.clear();
-        output.appendLine(`CCM Analysis — ${files.length} file(s), ${allResults.length} function(s)\n`);
+        output.appendLine(`CCM Analysis — ${allResults.length} function(s)\n`);
         output.appendLine(cli.toCsv(allResults));
         output.show();
         vscode.window.showInformationMessage(`Results written to ${csvPath}`);
@@ -96,22 +81,7 @@ function activate(context) {
         const target = await resolveTargetPath();
         if (!target) return;
 
-        const files = cli.walkDirectory(target);
-        if (files.length === 0) {
-            vscode.window.showInformationMessage('No supported files found');
-            return;
-        }
-
-        let count = 0;
-        for (const file of files) {
-            try {
-                cli.editFile(file);
-                count++;
-            } catch (err) {
-                // skip problematic files
-            }
-        }
-
+        const count = cli.updateDirectory(target);
         vscode.window.showInformationMessage(`Updated ${count} file(s)`);
     }));
 }

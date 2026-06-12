@@ -2,7 +2,7 @@
   "name": "cyclomatic-lens",
   "displayName": "Cyclomatic Lens",
   "description": "Simple inline cyclomatic complexity scores for C, C++, Java, JavaScript, TypeScript, and Python files",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "publisher": "bitlab",
   "readme": "README.md",
   "changelog": "CHANGELOG.md",

@@ -273,6 +273,57 @@ function editFile(fileInfo) {
     }
 }
 
+// ── Shared directory operations ──────────────────────────────────────────────
+
+function collectFiles(targetPath) {
+    if (!fs.existsSync(targetPath)) return null;
+
+    const stats = fs.statSync(targetPath);
+    const files = stats.isDirectory()
+        ? walkDirectory(targetPath)
+        : (() => {
+              const ext = path.extname(targetPath).toLowerCase();
+              if (SUPPORTED_EXTENSIONS[ext]) {
+                  return [{ filePath: targetPath, language: SUPPORTED_EXTENSIONS[ext] }];
+              }
+              return null;
+          })();
+
+    return files && files.length > 0 ? files : null;
+}
+
+function analyzeDirectory(targetPath) {
+    const files = collectFiles(targetPath);
+    if (!files) return [];
+
+    let allResults = [];
+    for (const file of files) {
+        try {
+            const results = analyzeFile(file);
+            allResults.push(...results);
+        } catch (err) {
+            console.error(`Error analyzing ${file.filePath}: ${err.message}`);
+        }
+    }
+    return allResults;
+}
+
+function updateDirectory(targetPath) {
+    const files = collectFiles(targetPath);
+    if (!files) return 0;
+
+    let count = 0;
+    for (const file of files) {
+        try {
+            editFile(file);
+            count++;
+        } catch (err) {
+            console.error(`Error editing ${file.filePath}: ${err.message}`);
+        }
+    }
+    return count;
+}
+
 // ── CLI entry ──────────────────────────────────────────────────────────────────
 
 function main() {
@@ -285,51 +336,19 @@ function main() {
     const command = args[0];
     const targetPath = path.resolve(args[1]);
 
-    if (!fs.existsSync(targetPath)) {
-        console.error(`Path not found: ${targetPath}`);
-        process.exit(1);
-    }
-
-    const stats = fs.statSync(targetPath);
-    const files = stats.isDirectory()
-        ? walkDirectory(targetPath)
-        : (() => {
-              const ext = path.extname(targetPath).toLowerCase();
-              if (SUPPORTED_EXTENSIONS[ext]) {
-                  return [{ filePath: targetPath, language: SUPPORTED_EXTENSIONS[ext] }];
-              }
-              console.error(`Unsupported file type: ${targetPath}`);
-              process.exit(1);
-          })();
-
-    if (files.length === 0) {
+    const files = collectFiles(targetPath);
+    if (!files) {
         console.error('No supported files found.');
         process.exit(0);
     }
 
     if (command === '--analyze') {
-        let allResults = [];
-        for (const file of files) {
-            try {
-                const results = analyzeFile(file);
-                allResults.push(...results);
-            } catch (err) {
-                console.error(`Error analyzing ${file.filePath}: ${err.message}`);
-            }
-        }
+        const allResults = analyzeDirectory(targetPath);
         const csvPath = path.resolve('ccm_analysis.csv');
         fs.writeFileSync(csvPath, toCsv(allResults), 'utf8');
         console.error(`Results written to ${csvPath}`);
     } else if (command === '--update') {
-        let count = 0;
-        for (const file of files) {
-            try {
-                editFile(file);
-                count++;
-            } catch (err) {
-                console.error(`Error editing ${file.filePath}: ${err.message}`);
-            }
-        }
+        const count = updateDirectory(targetPath);
         console.error(`Processed ${count} file(s).`);
     } else {
         console.error(`Unknown command: ${command}. Use '--analyze' or '--update'.`);
@@ -352,5 +371,8 @@ module.exports = {
     upsertComplexityTagPython,
     addJavaLikeDocstring,
     addPythonDocstring,
+    collectFiles,
+    analyzeDirectory,
+    updateDirectory,
     main
 };
