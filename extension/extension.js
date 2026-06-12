@@ -76,7 +76,7 @@ function activate(context) {
         vscode.window.showInformationMessage(`Results written to ${csvPath}`);
     }));
 
-    // ── Command: CCM Update Tags ────────────────────────────────────────────
+    // ── Command: CCM Update ────────────────────────────────────────────
     context.subscriptions.push(vscode.commands.registerCommand('cyclomaticlens.update', async () => {
         const target = await resolveTargetPath();
         if (!target) return;
@@ -88,8 +88,8 @@ function activate(context) {
 
 function isSupportedFile(document) {
     let language = getLanguage(document);
-    return (language==='c' || language==='java' || language==='javascript' || 
-            language==='typescript' || language==='python');
+    return (language === 'c' || language === 'java' || language === 'javascript' ||
+        language === 'typescript' || language === 'python');
 }
 
 function getWorkspaceRoot() {
@@ -123,7 +123,7 @@ async function resolveTargetPath() {
 }
 
 function getLanguage(document) {
-    if((document.languageId === 'c') || document.languageId === 'cpp' ||
+    if ((document.languageId === 'c') || document.languageId === 'cpp' ||
         document.fileName.endsWith('.c') || document.fileName.endsWith('.h') ||
         document.fileName.endsWith('.cpp') || document.fileName.endsWith('.cc') ||
         document.fileName.endsWith('.cxx') || document.fileName.endsWith('.hpp')) {
@@ -133,7 +133,7 @@ function getLanguage(document) {
     } else if (document.languageId === 'javascript' || document.fileName.endsWith('.js')) {
         return 'javascript';
     } else if (document.languageId === 'typescript' || document.languageId === 'typescriptreact' ||
-               document.fileName.endsWith('.ts') || document.fileName.endsWith('.tsx')) {
+        document.fileName.endsWith('.ts') || document.fileName.endsWith('.tsx')) {
         return 'typescript';
     } else if (document.languageId === 'python' || document.fileName.endsWith('.py')) {
         return 'python';
@@ -143,13 +143,13 @@ function getLanguage(document) {
 function analyzeAndDecorate(editor) {
     const document = editor.document;
     const sourceCode = document.getText();
-    
+
     let functions;
-    if(!isSupportedFile(document)){
+    if (!isSupportedFile(document)) {
         return null;
     }
     const language = getLanguage(document);
-    switch(language) {
+    switch (language) {
         case 'java':
             functions = coreAnalyzer.parseJavaFunctions(sourceCode);
             break;
@@ -164,14 +164,14 @@ function analyzeAndDecorate(editor) {
             functions = coreAnalyzer.parsePythonFunctions(sourceCode);
             break;
     }
-    
+
     const decorations = [];
-    
+
     if (functions) {
         functions.forEach(func => {
             const complexity = coreAnalyzer.calculateComplexity(func.body, language);
             const { label, color } = getComplexityStyle(complexity);
-            
+
             // Get the function definition line
             const line = document.lineAt(func.startLine);
             const annotationLine = func.startLine;
@@ -180,7 +180,7 @@ function analyzeAndDecorate(editor) {
                 annotationLine, annotationPosition,
                 annotationLine, annotationPosition
             );
-            
+
             decorations.push({
                 range: range,
                 renderOptions: {
@@ -192,7 +192,7 @@ function analyzeAndDecorate(editor) {
             });
         });
     }
-    
+
     editor.setDecorations(ccmDecorationType, decorations);
 }
 

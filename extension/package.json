@@ -55,7 +55,7 @@
       },
       {
         "command": "cyclomaticlens.update",
-        "title": "CCM: Update Tags"
+        "title": "CCM: Update"
       }
     ]
   },

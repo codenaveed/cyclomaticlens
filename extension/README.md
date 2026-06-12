@@ -30,9 +30,15 @@ A Visual Studio Code extension that computes and displays cyclomatic complexity 
 - **Efficient parsing**: Minimal impact on editor responsiveness
 - **Zero configuration**: Works out of the box
 
-### ⌨️ Command Palette
-- **CCM: Analyze** — Compute cyclomatic complexity for all supported files under a given path (file or directory). Results are saved as `ccm_analysis.csv` in the workspace root and displayed in an output panel.
-- **CCM: Update Tags** — Insert or update `@complexity <Level>` docstring tags for all functions across all supported files under a given path. 
+### ⌨️ Usage
+#### IDE Usage
+- Open any supported file in the editor, and you will see the CCM scores and complexity inline next to each function. It is updated as you type.  
+![CCM Demo](https://raw.githubusercontent.com/codenaveed/media/main/cyclomaticlens/ccmdemo.png)
+
+#### Command Palette Usage
+- Open command palette by pressing `Ctrl+Shift+P` (Windows/Linux) or `Cmd+Shift+P` (Mac).
+- Select **CCM: Analyze** — Computes cyclomatic complexity for all supported files under a given path (file or directory). Results are saved as `ccm_analysis.csv` in the workspace root and displayed in an output panel.
+- Select **CCM: Update** — Inserts or update `@complexity <Level>` docstring tags in source code for all functions across all supported files under a given path. 
 
 Both commands prompt for a path (absolute or relative to the workspace root).
 
@@ -79,9 +85,6 @@ Code is analyzed as you type, with debouncing to prevent performance issues. Com
 - **Educational**: Help developers understand code complexity concepts
 
 ## Limitations
-
-- Complexity is calculated per function/method, not for entire files
-- Some language-specific constructs may not be fully supported
 - Nested functions are counted as part of the parent function
 
 ## Technical Details
