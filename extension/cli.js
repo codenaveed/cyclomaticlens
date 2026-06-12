@@ -268,7 +268,9 @@ function editFile(fileInfo) {
     const modified = lines.join('\n');
     if (modified !== sourceCode) {
         fs.writeFileSync(fileInfo.filePath, modified, 'utf8');
+        return true;
     }
+    return false;
 }
 
 // ── Shared directory operations ──────────────────────────────────────────────
@@ -313,8 +315,7 @@ function updateDirectory(targetPath) {
     let count = 0;
     for (const file of files) {
         try {
-            editFile(file);
-            count++;
+            if (editFile(file)) count++;
         } catch (err) {
             console.error(`Error editing ${file.filePath}: ${err.message}`);
         }
