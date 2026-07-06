@@ -313,4 +313,20 @@ export namespace Example {
 
         return x;
     }
+
+    // ========== CASE 33 ==========
+    export function c33(x: number): number {
+        switch (x) {
+            case 1:
+            case 2:
+            case 3:
+                return 1;
+            case 4:
+            case 5:
+            case 6:
+                return 2;                 
+            default:
+                return 0;
+        }
+    }
 }

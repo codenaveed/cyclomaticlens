@@ -2,6 +2,9 @@
 
 All notable changes to the Cyclomatic Lens extension will be documented in this file.
 
+## [1.0.8] - Bug Fix
+- Fix fallthrough case and count them as 1
+
 ## [1.0.7] - Bug Fix
 ### Changed
 - **Idempotent Writes**: Fixed an issue where the extension would rewrite files even if the tags were already correct, preventing unnecessary file changes.

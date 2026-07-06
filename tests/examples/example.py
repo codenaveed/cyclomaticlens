@@ -332,3 +332,10 @@ def c32(a, b, c):
     x = 0 if x < 0 else x
 
     return x
+
+# ========== CASE 33 ==========
+def c33(x):
+    if x == 1 or x == 2 or x == 3:
+        return 1
+    else:
+        return 0

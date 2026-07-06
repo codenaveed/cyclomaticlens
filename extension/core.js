@@ -347,7 +347,8 @@ function calculateComplexity(functionBody, language) {
     // - 'if' adds 1 (including 'else if' - the 'if' is matched)
     // - 'else' alone does NOT add complexity (it's part of the if branch)
     // - 'for' and 'while' loops add 1 each
-    // - 'case' adds 1 each (but NOT 'default' - it's the fallback path)
+    // - 'case' adds 1 each for non-fallthrough cases (but NOT 'default')
+    //   consecutive fallthrough cases (case X: case Y:) count as 1
     // - 'catch' adds 1 (exception handling branch for Java)
     // - 'except' adds 1 for Python (exception handling)
     // Note: Python parsers don't count '?', '&&', '||' explicitly
@@ -360,7 +361,6 @@ function calculateComplexity(functionBody, language) {
             /\bif\b/g,           // if statements (including else if)
             /\bfor\b/g,          // for loops
             /\bwhile\b/g,        // while loops
-            /\bcase\b/g,         // case labels
             /\bcatch\b/g,        // catch clauses
             /\?/g,               // ternary operator
             /&&/g,               // and
@@ -372,7 +372,6 @@ function calculateComplexity(functionBody, language) {
             /\bif\b/g,           // if statements (including else if)
             /\bfor\b/g,          // for loops
             /\bwhile\b/g,        // while loops
-            /\bcase\b/g,         // case labels
             /\bcatch\b/g,        // catch clauses
             /\?/g,               // ternary operator
             /&&/g,               // and
@@ -385,7 +384,6 @@ function calculateComplexity(functionBody, language) {
             /\bif\b/g,           // if statements (including else if)
             /\bfor\b/g,          // for loops
             /\bwhile\b/g,        // while loops
-            /\bcase\b/g,         // case labels
             /\?/g,                // ternary operator  
             /&&/g,               // and
             /\|\|/g,             // or
@@ -418,6 +416,18 @@ function calculateComplexity(functionBody, language) {
         return complexity;
     }
     
+    // Count non-fallthrough case labels for C/Java/JS/TS
+    // A fallthrough case is one followed directly by another case or default
+    // (only whitespace between them). Fallthroughs don't add new decision paths.
+    if (language !== 'python') {
+        const caseKeywords = cleanBody.match(/\bcase\b/g);
+        if (caseKeywords) {
+            const fallthroughCases = cleanBody.match(/\bcase\b[^;:]*:\s*(?=\bcase\b|\bdefault\b)/g);
+            const fallthroughCount = fallthroughCases ? fallthroughCases.length : 0;
+            complexity += caseKeywords.length - fallthroughCount;
+        }
+    }
+
     patterns.forEach(pattern => {
         const matches = cleanBody.match(pattern);
         if (matches) {
